@@ -4,13 +4,14 @@ const cors = require("cors");
 const generate = require("./util/randomString");
 const request = require("request");
 const app = express();
+app.use(express.json());
 app.use(cors());
 
 const port = process.env.PORT || 5000;
 
 var client_id = "8e9ed7adc9bd4ed2b981197b8a7029c9";
 var client_secret = "9bcc940d0001494186f823b34f0a6345";
-var redirect_uri = "https://spotify-home.herokuapp.com/callback";
+var redirect_uri = "http://localhost:5000/callback";
 
 app.get("/login", (req, res) => {
   var state = generate();
@@ -58,11 +59,51 @@ app.get("/callback", function (req, res) {
       if (!error && response.statusCode === 200) {
         const { access_token, refresh_token } = body;
         res.redirect(
-          `https://ammyy9908.github.io/spotifyhome/?access_token=${access_token}&refresh_token=${refresh_token}`
+          `http://127.0.0.1:5500/?access_token=${access_token}&refresh_token=${refresh_token}`
         );
       }
     });
   }
+});
+
+app.post("/refresh_token", function (req, res) {
+  var { refresh_token } = req.body;
+
+  var authOptions = {
+    url: "https://accounts.spotify.com/api/token",
+    headers: {
+      Authorization:
+        "Basic " +
+        new Buffer(client_id + ":" + client_secret).toString("base64"),
+    },
+    form: {
+      grant_type: "refresh_token",
+      refresh_token: refresh_token,
+    },
+    json: true,
+  };
+
+  request.post(authOptions, function (error, response, body) {
+    if (!error && response.statusCode === 200) {
+      var access_token = body.access_token;
+
+      res.send({
+        access_token: access_token,
+      });
+    }
+  });
+});
+
+app.get("/support", async (req, res) => {
+  const { q } = req.query;
+  request.get(
+    `https://support.spotify.com/api/web/us/search/?q=plan`,
+    function (error, response, body) {
+      if (!error && response.statusCode === 200) {
+        res.status(200).send(body);
+      }
+    }
+  );
 });
 
 app.listen(port, () => {
