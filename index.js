@@ -58,7 +58,7 @@ app.get("/callback", function (req, res) {
       if (!error && response.statusCode === 200) {
         const { access_token, refresh_token } = body;
         res.redirect(
-          `http://127.0.0.1:5500/?access_token=${access_token}&refresh_token=${refresh_token}`
+          `https://ammyy9908.github.io/?access_token=${access_token}&refresh_token=${refresh_token}`
         );
       }
     });
